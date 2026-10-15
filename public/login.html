@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication - Treasure Hunt</title>
+  <!-- Inline script to prevent theme flash -->
+  <script>
+    (function() {
+      const theme = localStorage.getItem('th_theme') || 'dark';
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              cyan: '#00f3ff',
+              slate: '#0a0f1d',
+              darker: '#060913',
+              card: '#0f172a',
+              purple: '#9333ea',
+              green: '#00ff9d',
+              red: '#ff3366'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="cyber-grid-bg text-slate-100 min-h-screen flex flex-col justify-between">
+
+  <!-- Navbar with Theme Toggle -->
+  <header class="border-b border-cyan-500/20 bg-[#060913]/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-400 flex items-center justify-center neon-glow group-hover:scale-105 transition-transform">
+          <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+          </svg>
+        </div>
+        <span class="font-cyber font-bold text-base text-white tracking-wider">TREASURE <span class="text-cyan-400">HUNT</span></span>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <!-- Theme Toggle Button (Light / Dark Mode) -->
+        <button 
+          id="theme-toggle-btn" 
+          class="theme-toggle-btn p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-amber-300 transition-all flex items-center gap-1.5 text-xs font-mono-code"
+          title="Toggle Light / Dark Mode"
+        >
+          <span class="theme-toggle-icon">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </span>
+          <span class="hidden sm:inline">Theme</span>
+        </button>
+
+        <a href="/" class="text-xs text-slate-400 hover:text-cyan-300 font-mono-code flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          <span>Home</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Main Container -->
+  <main class="max-w-md w-full mx-auto px-4 py-8 flex-1 flex flex-col justify-center">
+    
+    <div class="glass-panel-elevated p-6 sm:p-8 rounded-2xl relative cyber-corners border border-cyan-500/30">
+      
+      <!-- Animated Hologram Header Badge -->
+      <div class="w-14 h-14 mx-auto -mt-12 mb-4 rounded-2xl bg-[#060913] border-2 border-cyan-400 flex items-center justify-center neon-glow shadow-xl">
+        <svg id="badge-icon-team" class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <svg id="badge-icon-admin" class="w-7 h-7 text-purple-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+      </div>
+
+      <!-- Role Switcher Tabs -->
+      <div class="flex rounded-xl bg-[#060913] p-1 mb-6 border border-slate-800">
+        <button id="tab-team" class="flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all bg-cyan-400 text-slate-950 shadow-md">
+          TEAM PORTAL
+        </button>
+        <button id="tab-admin" class="flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all text-slate-400 hover:text-white">
+          ORGANIZER (ADMIN)
+        </button>
+      </div>
+
+      <!-- Quick Demo Fill Bar -->
+      <div class="flex items-center justify-between bg-[#060913]/60 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono-code mb-5">
+        <span class="text-slate-400">Quick Demo Autofill:</span>
+        <button id="btn-demo-autofill" class="text-cyan-400 hover:text-cyan-300 font-bold hover:underline flex items-center gap-1">
+          <span>⚡ Auto-fill Credentials</span>
+        </button>
+      </div>
+
+      <!-- FORM 1: Participant / Team Register & Login -->
+      <form id="team-form" class="space-y-5">
+        <div class="text-center mb-4">
+          <h2 class="text-2xl font-bold font-cyber text-white">Team Battle Station</h2>
+          <p class="text-xs text-slate-400 mt-1">
+            New teams auto-register; returning teams resume existing progress.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-cyan-300 mb-1.5 flex items-center justify-between">
+            <span>Team Name</span>
+            <span class="text-[10px] text-slate-500 font-sans">Unique moniker</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="team-name-input" 
+              placeholder="e.g. CyberVanguard" 
+              required
+              class="w-full bg-[#060913] border border-cyan-500/30 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-sm font-mono-code transition-all"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-cyan-300 mb-1.5 flex items-center justify-between">
+            <span>Team PIN (3-6 digits)</span>
+            <span class="text-[10px] text-slate-500 font-sans">Remember to resume</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="team-pin-input" 
+              placeholder="••••" 
+              maxlength="8"
+              required
+              class="w-full bg-[#060913] border border-cyan-500/30 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-sm font-mono-code tracking-widest transition-all"
+            >
+            <button 
+              type="button" 
+              id="toggle-pin-visibility" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 p-1"
+              title="Show/Hide PIN"
+            >
+              <svg id="eye-icon-pin" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="team-submit-btn"
+          class="w-full py-3.5 px-4 rounded-xl font-bold bg-cyan-400 text-slate-950 hover:bg-cyan-300 shadow-lg shadow-cyan-500/30 font-tech text-lg uppercase tracking-wider transition-all transform active:scale-95 flex items-center justify-center gap-2"
+        >
+          <span>Enter Game Terminal</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </form>
+
+      <!-- FORM 2: Admin Login -->
+      <form id="admin-form" class="space-y-5 hidden">
+        <div class="text-center mb-4">
+          <h2 class="text-2xl font-bold font-cyber text-purple-400">Admin Control</h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Access stage management, live GPS tracking & printable QR codes.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-purple-300 mb-1.5">Admin Username</label>
+          <input 
+            type="text" 
+            id="admin-user-input" 
+            placeholder="admin" 
+            value="admin"
+            required
+            class="w-full bg-[#060913] border border-purple-500/30 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-sm font-mono-code transition-all"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-purple-300 mb-1.5">Admin Password</label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="admin-pass-input" 
+              placeholder="••••••••" 
+              value="admin123"
+              required
+              class="w-full bg-[#060913] border border-purple-500/30 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-sm font-mono-code transition-all"
+            >
+            <button 
+              type="button" 
+              id="toggle-admin-pass-visibility" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-300 p-1"
+              title="Show/Hide Password"
+            >
+              <svg id="eye-icon-admin" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </button>
+          </div>
+          <span class="text-[11px] text-slate-500 mt-1 block">Default credential: <code class="text-purple-300">admin123</code></span>
+        </div>
+
+        <button 
+          type="submit" 
+          id="admin-submit-btn"
+          class="w-full py-3.5 px-4 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-600/30 font-tech text-lg uppercase tracking-wider transition-all transform active:scale-95 flex items-center justify-center gap-2"
+        >
+          <span>Access Command Center</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </form>
+
+    </div>
+
+  </main>
+
+  <footer class="py-4 text-center text-xs text-slate-600 font-mono-code">
+    TREASURE HUNT
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Tab switching logic
+    const tabTeam = document.getElementById('tab-team');
+    const tabAdmin = document.getElementById('tab-admin');
+    const teamForm = document.getElementById('team-form');
+    const adminForm = document.getElementById('admin-form');
+    const badgeTeam = document.getElementById('badge-icon-team');
+    const badgeAdmin = document.getElementById('badge-icon-admin');
+    let currentRole = 'team';
+
+    tabTeam.addEventListener('click', () => {
+      window.TreasureHunt.sounds.playClick();
+      currentRole = 'team';
+      tabTeam.className = 'flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all bg-cyan-400 text-slate-950 shadow-md';
+      tabAdmin.className = 'flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all text-slate-400 hover:text-white';
+      teamForm.classList.remove('hidden');
+      adminForm.classList.add('hidden');
+      badgeTeam.classList.remove('hidden');
+      badgeAdmin.classList.add('hidden');
+    });
+
+    tabAdmin.addEventListener('click', () => {
+      window.TreasureHunt.sounds.playClick();
+      currentRole = 'admin';
+      tabAdmin.className = 'flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all bg-purple-600 text-white shadow-md';
+      tabTeam.className = 'flex-1 py-2.5 rounded-lg text-xs font-bold font-mono-code transition-all text-slate-400 hover:text-white';
+      adminForm.classList.remove('hidden');
+      teamForm.classList.add('hidden');
+      badgeAdmin.classList.remove('hidden');
+      badgeTeam.classList.add('hidden');
+    });
+
+    // Check URL parameters for ?role=admin
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('role') === 'admin') {
+      tabAdmin.click();
+    }
+
+    // Demo Autofill Button
+    document.getElementById('btn-demo-autofill').addEventListener('click', () => {
+      window.TreasureHunt.sounds.playClick();
+      if (currentRole === 'team') {
+        document.getElementById('team-name-input').value = 'CyberKnights';
+        document.getElementById('team-pin-input').value = '1234';
+        window.TreasureHunt.showToast('Demo team credentials loaded.', 'info');
+      } else {
+        document.getElementById('admin-user-input').value = 'admin';
+        document.getElementById('admin-pass-input').value = 'admin123';
+        window.TreasureHunt.showToast('Demo admin credentials loaded.', 'info');
+      }
+    });
+
+    // Show/Hide PIN toggle
+    const pinInput = document.getElementById('team-pin-input');
+    const togglePinBtn = document.getElementById('toggle-pin-visibility');
+    togglePinBtn.addEventListener('click', () => {
+      const isPass = pinInput.type === 'password';
+      pinInput.type = isPass ? 'text' : 'password';
+      togglePinBtn.innerHTML = isPass 
+        ? `<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>`
+        : `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+    });
+
+    // Show/Hide Admin Pass toggle
+    const adminPassInput = document.getElementById('admin-pass-input');
+    const toggleAdminPassBtn = document.getElementById('toggle-admin-pass-visibility');
+    toggleAdminPassBtn.addEventListener('click', () => {
+      const isPass = adminPassInput.type === 'password';
+      adminPassInput.type = isPass ? 'text' : 'password';
+      toggleAdminPassBtn.innerHTML = isPass 
+        ? `<svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>`
+        : `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+    });
+
+    // Team form submit
+    teamForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const teamName = document.getElementById('team-name-input').value.trim();
+      const pin = document.getElementById('team-pin-input').value.trim();
+      const submitBtn = document.getElementById('team-submit-btn');
+
+      if (!teamName || !pin) {
+        window.TreasureHunt.showToast('Please enter both Team Name and PIN.', 'error');
+        window.TreasureHunt.sounds.playError();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>CONNECTING...</span>`;
+
+      try {
+        const res = await window.TreasureHunt.API.loginTeam(teamName, pin);
+        if (res.success) {
+          window.TreasureHunt.Auth.setSession(res.token, 'team', res.team.name);
+          window.TreasureHunt.sounds.playVictory();
+          window.TreasureHunt.showToast(`Welcome Team ${res.team.name}! Entering hunt...`, 'success');
+          setTimeout(() => {
+            window.location.href = '/play';
+          }, 600);
+        } else {
+          window.TreasureHunt.sounds.playError();
+          window.TreasureHunt.showToast(res.error || 'Authentication failed.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>Enter Game Terminal</span> <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+        }
+      } catch (err) {
+        window.TreasureHunt.sounds.playError();
+        window.TreasureHunt.showToast('Network error while connecting to game server.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Enter Game Terminal</span> <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+      }
+    });
+
+    // Admin form submit
+    adminForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('admin-user-input').value.trim();
+      const password = document.getElementById('admin-pass-input').value.trim();
+      const submitBtn = document.getElementById('admin-submit-btn');
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>VERIFYING...</span>`;
+
+      try {
+        const res = await window.TreasureHunt.API.loginAdmin(username, password);
+        if (res.success) {
+          window.TreasureHunt.Auth.setSession(res.token, 'admin');
+          window.TreasureHunt.sounds.playVictory();
+          window.TreasureHunt.showToast('Admin clearance granted. Entering Command Center...', 'success');
+          setTimeout(() => {
+            window.location.href = '/admin';
+          }, 600);
+        } else {
+          window.TreasureHunt.sounds.playError();
+          window.TreasureHunt.showToast(res.error || 'Invalid admin credentials.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>Access Command Center</span> <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+        }
+      } catch (err) {
+        window.TreasureHunt.sounds.playError();
+        window.TreasureHunt.showToast('Network error while connecting to server.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Access Command Center</span> <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+      }
+    });
+  </script>
+</body>
+</html>

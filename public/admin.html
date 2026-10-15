@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Command Center - Treasure Hunt</title>
+  <!-- Inline script to prevent theme flash -->
+  <script>
+    (function() {
+      const theme = localStorage.getItem('th_theme') || 'dark';
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+      }
+    })();
+  </script>
+  <!-- Leaflet.js for Live GPS Campus Mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              cyan: '#00f3ff',
+              slate: '#0a0f1d',
+              darker: '#060913',
+              card: '#0f172a',
+              purple: '#9333ea',
+              green: '#00ff9d',
+              red: '#ff3366'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="cyber-grid-bg text-slate-100 min-h-screen flex flex-col">
+
+  <!-- Top Navbar -->
+  <header class="border-b border-purple-500/20 bg-[#060913]/90 backdrop-blur-md sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-400 flex items-center justify-center">
+          <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="text-[10px] uppercase tracking-widest text-purple-400 font-mono-code font-bold">ORGANIZER CONTROL</span>
+          <h1 class="text-base sm:text-lg font-bold font-cyber text-white">TREASURE HUNT ADMIN</h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Theme Toggle Button -->
+        <button 
+          class="theme-toggle-btn p-2 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700/80 text-amber-300 transition-all text-xs font-mono-code flex items-center gap-1.5"
+          title="Toggle Light / Dark Mode"
+        >
+          <span class="theme-toggle-icon">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </span>
+          <span class="hidden sm:inline">Theme</span>
+        </button>
+
+        <button id="print-all-qr-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-1.5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          <span class="hidden sm:inline">Print</span> QR Cards
+        </button>
+        <button id="admin-logout-btn" class="px-3 py-1.5 rounded-lg text-xs font-mono-code text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 transition-all">
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Admin Main Dashboard Content -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full no-print">
+
+    <!-- Overview Stats Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="glass-panel p-4 rounded-xl border border-purple-500/20">
+        <span class="text-xs font-mono-code text-slate-400 uppercase">Configured Stages</span>
+        <div id="stat-stages-count" class="text-2xl font-bold font-cyber text-cyan-400 mt-1">--</div>
+      </div>
+      <div class="glass-panel p-4 rounded-xl border border-purple-500/20">
+        <span class="text-xs font-mono-code text-slate-400 uppercase">Registered Teams</span>
+        <div id="stat-teams-count" class="text-2xl font-bold font-cyber text-purple-400 mt-1">--</div>
+      </div>
+      <div class="glass-panel p-4 rounded-xl border border-purple-500/20">
+        <span class="text-xs font-mono-code text-slate-400 uppercase">Finished Teams</span>
+        <div id="stat-finished-count" class="text-2xl font-bold font-cyber text-emerald-400 mt-1">--</div>
+      </div>
+      <div class="glass-panel p-4 rounded-xl border border-purple-500/20">
+        <span class="text-xs font-mono-code text-slate-400 uppercase">Fastest Finish</span>
+        <div id="stat-fastest-time" class="text-2xl font-bold font-cyber text-amber-300 mt-1">--:--</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-3 border-b border-slate-800 pb-3 mb-6">
+      <button id="tab-btn-stages" class="px-4 py-2 rounded-lg text-sm font-bold font-mono-code bg-purple-600 text-white shadow">
+        STAGES & QR CODES
+      </button>
+      <button id="tab-btn-teams" class="px-4 py-2 rounded-lg text-sm font-bold font-mono-code text-slate-400 hover:text-white">
+        LIVE TEAMS & TELEMETRY
+      </button>
+      <div class="ml-auto flex items-center gap-2">
+        <button id="new-stage-modal-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold font-tech uppercase tracking-wider bg-cyan-400 text-slate-950 hover:bg-cyan-300 flex items-center gap-1 shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Add New Stage
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION 1: STAGE MANAGEMENT & QR CODES -->
+    <div id="view-stages" class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold font-cyber text-white">Treasure Hunt Stages</h2>
+          <p class="text-xs text-slate-400">Manage location clues, encrypted questions, answers, and printable QR tokens.</p>
+        </div>
+      </div>
+
+      <!-- Stage Cards Grid -->
+      <div id="stages-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-panel p-8 rounded-xl text-center text-slate-500 col-span-2 font-mono-code">
+          Loading stages from server...
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: LIVE TEAMS & TELEMETRY -->
+    <div id="view-teams" class="space-y-6 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold font-cyber text-white">Participant Telemetry & Live Tracking</h2>
+          <p class="text-xs text-slate-400">Live monitoring of team progress, campus GPS coordinates, and administrative reset controls.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="reset-all-teams-btn" class="px-3 py-1.5 rounded-lg text-xs font-mono-code text-rose-400 border border-rose-500/40 hover:bg-rose-500/10">
+            Reset All Teams
+          </button>
+          <button id="refresh-teams-btn" class="px-3 py-1.5 rounded-lg text-xs font-mono-code text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/10">
+            Refresh Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Interactive Campus GPS Map -->
+      <div class="glass-panel p-4 rounded-2xl border border-cyan-500/30">
+        <div class="flex items-center justify-between mb-3 text-xs font-mono-code">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span class="font-bold text-white uppercase font-cyber">Live Campus GPS Map</span>
+          </div>
+          <span id="map-teams-count" class="text-cyan-300">0 Live Locations Pinged</span>
+        </div>
+        <div id="campus-live-map"></div>
+      </div>
+
+      <div class="glass-panel rounded-xl overflow-hidden border border-purple-500/20">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-[#060913] text-slate-400 uppercase font-mono-code text-xs border-b border-purple-500/20">
+              <tr>
+                <th class="py-3 px-4">Team</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Current Stage</th>
+                <th class="py-3 px-4">Live GPS Location</th>
+                <th class="py-3 px-4">Total Time</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teams-table-body" class="divide-y divide-slate-800">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-500 font-mono-code">
+                  Loading teams data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT STAGE -->
+  <div id="stage-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="glass-panel-elevated p-6 sm:p-8 rounded-2xl max-w-xl w-full border border-cyan-500/30 relative">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+        <h3 id="stage-modal-title" class="text-xl font-bold font-cyber text-cyan-400">Configure Stage</h3>
+        <button id="close-stage-modal-btn" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="stage-form" class="space-y-4">
+        <input type="hidden" id="stage-form-id">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Stage Number</label>
+            <input type="number" id="stage-form-num" min="1" required class="w-full bg-[#060913] border border-cyan-500/30 rounded-lg px-3 py-2 text-white font-mono-code text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Points Awarded</label>
+            <input type="number" id="stage-form-points" value="100" min="0" required class="w-full bg-[#060913] border border-cyan-500/30 rounded-lg px-3 py-2 text-white font-mono-code text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Stage Title</label>
+          <input type="text" id="stage-form-title" placeholder="e.g. The Cryptic Library" required class="w-full bg-[#060913] border border-cyan-500/30 rounded-lg px-3 py-2 text-white text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Location Clue / Hint (Directs to QR)</label>
+          <textarea id="stage-form-hint" rows="2" placeholder="Describe the physical location on campus where the QR code sticker is hidden..." required class="w-full bg-[#060913] border border-cyan-500/30 rounded-lg px-3 py-2 text-white text-sm"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Secret QR Token</label>
+          <input type="text" id="stage-form-token" placeholder="Auto-generated if empty" class="w-full bg-[#060913] border border-cyan-500/30 rounded-lg px-3 py-2 text-cyan-300 font-mono-code text-sm">
+        </div>
+
+        <!-- Optional Puzzle Fields (Hidden / Optional) -->
+        <div class="border-t border-slate-800 pt-3">
+          <details class="text-xs">
+            <summary class="cursor-pointer text-slate-500 hover:text-cyan-400 font-mono-code">Optional: Add Riddle / Puzzle (if desired)</summary>
+            <div class="space-y-3 mt-3">
+              <div>
+                <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Puzzle Question</label>
+                <textarea id="stage-form-question" rows="2" placeholder="Optional brain-teaser..." class="w-full bg-[#060913] border border-slate-800 rounded-lg px-3 py-2 text-white text-xs"></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-mono-code uppercase text-slate-400 mb-1">Puzzle Answer</label>
+                <input type="text" id="stage-form-answer" placeholder="Optional answer..." class="w-full bg-[#060913] border border-slate-800 rounded-lg px-3 py-2 text-emerald-400 font-mono-code text-xs">
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
+          <button type="button" id="cancel-stage-btn" class="px-4 py-2 rounded-lg text-xs font-mono-code text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 rounded-lg text-xs font-bold font-tech uppercase tracking-wider bg-cyan-400 text-slate-950 hover:bg-cyan-300 shadow-md">Save Stage</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PRINT-READY PHYSICAL QR CARDS CONTAINER -->
+  <div id="print-sheet" class="hidden print-only max-w-4xl mx-auto p-4 bg-white text-black">
+    <!-- Populated dynamically when user triggers Print -->
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Route guard: Ensure user has valid admin session
+    async function verifyAdminSession() {
+      const auth = await window.TreasureHunt.API.checkAuth();
+      if (!auth.authenticated || auth.role !== 'admin') {
+        window.TreasureHunt.Auth.clearSession();
+        window.location.href = '/login?role=admin';
+      }
+    }
+    verifyAdminSession();
+
+    // Tab Navigation
+    const tabStages = document.getElementById('tab-btn-stages');
+    const tabTeams = document.getElementById('tab-btn-teams');
+    const viewStages = document.getElementById('view-stages');
+    const viewTeams = document.getElementById('view-teams');
+
+    tabStages.addEventListener('click', () => {
+      tabStages.className = 'px-4 py-2 rounded-lg text-sm font-bold font-mono-code bg-purple-600 text-white shadow';
+      tabTeams.className = 'px-4 py-2 rounded-lg text-sm font-bold font-mono-code text-slate-400 hover:text-white';
+      viewStages.classList.remove('hidden');
+      viewTeams.classList.add('hidden');
+    });
+
+    tabTeams.addEventListener('click', () => {
+      tabTeams.className = 'px-4 py-2 rounded-lg text-sm font-bold font-mono-code bg-purple-600 text-white shadow';
+      tabStages.className = 'px-4 py-2 rounded-lg text-sm font-bold font-mono-code text-slate-400 hover:text-white';
+      viewTeams.classList.remove('hidden');
+      viewStages.classList.add('hidden');
+      loadTeamsData();
+    });
+
+    let currentStagesData = [];
+
+    // Load Stages
+    async function loadStagesData() {
+      try {
+        const stages = await window.TreasureHunt.API.getAdminStages();
+        currentStagesData = stages;
+        document.getElementById('stat-stages-count').innerText = stages.length;
+
+        const container = document.getElementById('stages-container');
+        if (!stages || stages.length === 0) {
+          container.innerHTML = `
+            <div class="glass-panel p-8 rounded-xl text-center text-slate-500 col-span-2 font-mono-code">
+              No stages created yet. Click "Add New Stage" above to begin!
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = stages.map(stage => {
+          return `
+            <div class="glass-panel-elevated p-6 rounded-2xl border border-cyan-500/20 flex flex-col justify-between relative group hover:border-cyan-400 transition-all">
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 font-cyber font-bold flex items-center justify-center text-sm">
+                      #${stage.stageNumber}
+                    </span>
+                    <h3 class="text-lg font-bold font-cyber text-white">${stage.title}</h3>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono-code">
+                      ${stage.points || 100} pts
+                    </span>
+                    <button onclick="editStage('${stage.id}')" class="p-1.5 rounded-md text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10 transition-colors" title="Edit Stage">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </button>
+                    <button onclick="deleteStage('${stage.id}')" class="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Delete Stage">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-3 text-xs mb-6">
+                  <div>
+                    <span class="text-cyan-400 font-mono-code uppercase font-bold block mb-1">📍 Physical Clue:</span>
+                    <p class="text-slate-300 bg-[#060913]/60 p-2.5 rounded-lg border border-slate-800">${stage.locationHint}</p>
+                  </div>
+
+                  <div>
+                    <span class="text-purple-400 font-mono-code uppercase font-bold block mb-1">🧩 Cryptic Puzzle:</span>
+                    <p class="text-slate-300 bg-[#060913]/60 p-2.5 rounded-lg border border-slate-800">${stage.puzzleQuestion}</p>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 font-mono-code">
+                    <div class="bg-[#060913]/60 p-2 rounded-lg border border-slate-800">
+                      <span class="text-slate-500 block text-[10px]">CORRECT ANSWER</span>
+                      <span class="text-emerald-400 font-bold">${stage.puzzleAnswer}</span>
+                    </div>
+                    <div class="bg-[#060913]/60 p-2 rounded-lg border border-slate-800">
+                      <span class="text-slate-500 block text-[10px]">SECRET TOKEN</span>
+                      <span class="text-cyan-300 truncate block select-all" title="${stage.secretQrToken}">${stage.secretQrToken}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- QR Code Preview Block -->
+              <div class="border-t border-slate-800/80 pt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <img src="${stage.qrDataUrl}" alt="QR Code" class="w-16 h-16 rounded-lg bg-white p-1 shadow-md">
+                  <div>
+                    <div class="text-xs font-bold text-white font-mono-code">Physical QR Tag</div>
+                    <a href="${stage.qrDataUrl}" download="STAGE_${stage.stageNumber}_QR.png" class="text-[11px] text-cyan-400 hover:underline">
+                      Download Image
+                    </a>
+                  </div>
+                </div>
+                <button onclick="printSingleCard('${stage.id}')" class="px-3 py-1.5 rounded-lg text-xs font-mono-code border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
+                  Print Card
+                </button>
+              </div>
+
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Live Leaflet Map Instance
+    let leafletMap = null;
+    let mapMarkers = {};
+
+    function initLeafletMapIfNeeded(teams) {
+      const mapContainer = document.getElementById('campus-live-map');
+      if (!mapContainer) return;
+
+      if (!leafletMap && typeof L !== 'undefined') {
+        // Default center on campus or first team's coordinates
+        let defaultLat = 12.9716;
+        let defaultLng = 77.5946;
+
+        const teamWithLoc = teams.find(t => t.liveLocation);
+        if (teamWithLoc) {
+          defaultLat = teamWithLoc.liveLocation.latitude;
+          defaultLng = teamWithLoc.liveLocation.longitude;
+        }
+
+        leafletMap = L.map('campus-live-map').setView([defaultLat, defaultLng], 15);
+
+        // Cyber dark / clean tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(leafletMap);
+      }
+
+      if (!leafletMap) return;
+
+      // Update team markers
+      let validBounds = [];
+      let countWithLocation = 0;
+
+      teams.forEach(t => {
+        if (t.liveLocation && t.liveLocation.latitude && t.liveLocation.longitude) {
+          countWithLocation++;
+          const pos = [t.liveLocation.latitude, t.liveLocation.longitude];
+          validBounds.push(pos);
+
+          const popupContent = `
+            <div style="font-family: monospace; font-size: 12px; line-height: 1.4;">
+              <strong style="font-size: 14px; color: #0284c7;">${t.name}</strong><br>
+              <strong>Status:</strong> ${t.completed ? 'FINISHED' : 'Stage ' + t.currentStage}<br>
+              <strong>Accuracy:</strong> ±${t.liveLocation.accuracy}m<br>
+              <strong>Updated:</strong> ${new Date(t.liveLocation.updatedAt).toLocaleTimeString()}<br>
+              <a href="${t.liveLocation.mapsUrl}" target="_blank" style="color: #9333ea; font-weight: bold;">Open in Google Maps ↗</a>
+            </div>
+          `;
+
+          if (mapMarkers[t.id]) {
+            mapMarkers[t.id].setLatLng(pos);
+            mapMarkers[t.id].setPopupContent(popupContent);
+          } else {
+            const marker = L.marker(pos).addTo(leafletMap);
+            marker.bindPopup(popupContent);
+            mapMarkers[t.id] = marker;
+          }
+        }
+      });
+
+      document.getElementById('map-teams-count').innerText = `${countWithLocation} Live Locations Pinged`;
+
+      if (validBounds.length > 0 && leafletMap) {
+        leafletMap.fitBounds(validBounds, { maxZoom: 16, padding: [40, 40] });
+      }
+    }
+
+    // Load Teams
+    async function loadTeamsData() {
+      try {
+        const teams = await window.TreasureHunt.API.getAdminTeams();
+        document.getElementById('stat-teams-count').innerText = teams.length;
+        const finishedTeams = teams.filter(t => t.completed);
+        document.getElementById('stat-finished-count').innerText = finishedTeams.length;
+
+        if (finishedTeams.length > 0) {
+          const minSec = Math.min(...finishedTeams.map(t => t.totalTimeSeconds));
+          document.getElementById('stat-fastest-time').innerText = window.TreasureHunt.formatSeconds(minSec);
+        } else {
+          document.getElementById('stat-fastest-time').innerText = '--:--';
+        }
+
+        // Update Map
+        initLeafletMapIfNeeded(teams);
+
+        const tbody = document.getElementById('teams-table-body');
+        if (!teams || teams.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="py-6 text-center text-slate-500 font-mono-code">
+                No participant teams registered yet.
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = teams.map(t => {
+          let locationHtml = '<span class="text-slate-500">Awaiting GPS ping</span>';
+          if (t.liveLocation && t.liveLocation.latitude) {
+            locationHtml = `
+              <div>
+                <span class="text-cyan-300 font-bold block">📍 ${t.liveLocation.latitude.toFixed(4)}, ${t.liveLocation.longitude.toFixed(4)}</span>
+                <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                  <span>±${t.liveLocation.accuracy}m</span>
+                  <span>•</span>
+                  <a href="${t.liveLocation.mapsUrl}" target="_blank" class="text-purple-400 hover:underline font-bold">Maps ↗</a>
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <tr class="hover:bg-slate-800/40 font-mono-code text-xs">
+              <td class="py-3 px-4 font-bold text-white">${t.name}</td>
+              <td class="py-3 px-4">
+                ${t.completed ? 
+                  '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">COMPLETED</span>' : 
+                  '<span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">IN PROGRESS</span>'}
+              </td>
+              <td class="py-3 px-4 text-purple-300">Stage ${t.currentStage}</td>
+              <td class="py-3 px-4">
+                ${locationHtml}
+              </td>
+              <td class="py-3 px-4 text-slate-300">
+                ${window.TreasureHunt.formatSeconds(t.elapsedSeconds)}
+              </td>
+              <td class="py-3 px-4 text-right">
+                <button onclick="resetSingleTeam('${t.id}')" class="text-rose-400 hover:text-rose-300 hover:underline">
+                  Reset Progress
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Modal Add / Edit Stage
+    const modal = document.getElementById('stage-modal');
+    const newStageBtn = document.getElementById('new-stage-modal-btn');
+    const closeModalBtn = document.getElementById('close-stage-modal-btn');
+    const cancelBtn = document.getElementById('cancel-stage-btn');
+    const stageForm = document.getElementById('stage-form');
+
+    function openStageModal(stage = null) {
+      if (stage) {
+        document.getElementById('stage-modal-title').innerText = 'Edit Stage ' + stage.stageNumber;
+        document.getElementById('stage-form-id').value = stage.id;
+        document.getElementById('stage-form-num').value = stage.stageNumber;
+        document.getElementById('stage-form-points').value = stage.points || 100;
+        document.getElementById('stage-form-title').value = stage.title;
+        document.getElementById('stage-form-hint').value = stage.locationHint;
+        document.getElementById('stage-form-question').value = stage.puzzleQuestion;
+        document.getElementById('stage-form-answer').value = stage.puzzleAnswer;
+        document.getElementById('stage-form-token').value = stage.secretQrToken;
+      } else {
+        document.getElementById('stage-modal-title').innerText = 'Create New Stage';
+        document.getElementById('stage-form-id').value = '';
+        const nextNum = currentStagesData.length + 1;
+        document.getElementById('stage-form-num').value = nextNum;
+        document.getElementById('stage-form-points').value = 100;
+        document.getElementById('stage-form-title').value = `Sector ${nextNum}`;
+        document.getElementById('stage-form-hint').value = '';
+        document.getElementById('stage-form-question').value = '';
+        document.getElementById('stage-form-answer').value = '';
+        document.getElementById('stage-form-token').value = `INFOTSAV_STAGE${nextNum}_` + Math.random().toString(36).substring(2, 6).toUpperCase();
+      }
+      modal.classList.remove('hidden');
+    }
+
+    newStageBtn.addEventListener('click', () => openStageModal());
+    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+    window.editStage = (id) => {
+      const stage = currentStagesData.find(s => s.id === id);
+      if (stage) openStageModal(stage);
+    };
+
+    window.deleteStage = async (id) => {
+      if (!confirm('Are you sure you want to delete this stage?')) return;
+      try {
+        const res = await window.TreasureHunt.API.deleteStage(id);
+        if (res.success) {
+          window.TreasureHunt.showToast('Stage removed successfully.', 'success');
+          loadStagesData();
+        } else {
+          window.TreasureHunt.showToast(res.error || 'Failed to delete stage.', 'error');
+        }
+      } catch (err) {
+        window.TreasureHunt.showToast('Error deleting stage.', 'error');
+      }
+    };
+
+    stageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('stage-form-id').value;
+      const data = {
+        stageNumber: Number(document.getElementById('stage-form-num').value),
+        points: Number(document.getElementById('stage-form-points').value),
+        title: document.getElementById('stage-form-title').value.trim(),
+        locationHint: document.getElementById('stage-form-hint').value.trim(),
+        puzzleQuestion: document.getElementById('stage-form-question').value.trim(),
+        puzzleAnswer: document.getElementById('stage-form-answer').value.trim(),
+        secretQrToken: document.getElementById('stage-form-token').value.trim()
+      };
+
+      try {
+        let res;
+        if (id) {
+          res = await window.TreasureHunt.API.updateStage(id, data);
+        } else {
+          res = await window.TreasureHunt.API.createStage(data);
+        }
+
+        if (res.success) {
+          window.TreasureHunt.showToast(id ? 'Stage updated successfully.' : 'New stage created.', 'success');
+          modal.classList.add('hidden');
+          loadStagesData();
+        } else {
+          window.TreasureHunt.showToast(res.error || 'Failed to save stage.', 'error');
+        }
+      } catch (err) {
+        window.TreasureHunt.showToast('Network error while saving stage.', 'error');
+      }
+    });
+
+    // Reset Controls
+    window.resetSingleTeam = async (id) => {
+      if (!confirm('Reset this team\'s progress to Stage 1?')) return;
+      try {
+        const res = await window.TreasureHunt.API.resetTeam(id);
+        if (res.success) {
+          window.TreasureHunt.showToast('Team progress reset.', 'success');
+          loadTeamsData();
+        }
+      } catch (e) {
+        window.TreasureHunt.showToast('Error resetting team.', 'error');
+      }
+    };
+
+    document.getElementById('reset-all-teams-btn').addEventListener('click', async () => {
+      if (!confirm('WARNING: Reset ALL teams progress and telemetry data? This cannot be undone!')) return;
+      try {
+        const res = await window.TreasureHunt.API.resetAllTeams();
+        if (res.success) {
+          window.TreasureHunt.showToast('All teams reset.', 'success');
+          loadTeamsData();
+        }
+      } catch (e) {
+        window.TreasureHunt.showToast('Error resetting teams.', 'error');
+      }
+    });
+
+    document.getElementById('refresh-teams-btn').addEventListener('click', loadTeamsData);
+
+    // Logout
+    document.getElementById('admin-logout-btn').addEventListener('click', () => {
+      window.TreasureHunt.Auth.clearSession();
+      window.location.href = '/login?role=admin';
+    });
+
+    // PRINT PHYSICAL QR CARDS
+    function generatePrintCardHtml(stage) {
+      return `
+        <div class="qr-print-card font-mono text-center mb-8 border-4 border-dashed border-black p-6 rounded-xl">
+          <div class="text-xs uppercase font-bold tracking-widest text-gray-600 mb-1">TREASURE HUNT PHYSICAL MARKER</div>
+          <div class="text-2xl font-black uppercase mb-2">STAGE ${stage.stageNumber}: ${stage.title}</div>
+          <div class="flex justify-center my-4">
+            <img src="${stage.qrDataUrl}" alt="QR" style="width: 260px; height: 260px;" class="border-2 border-black p-2">
+          </div>
+          <div class="text-sm font-bold text-gray-800 mb-1">SCAN WITH PARTICIPANT CAMERA TERMINAL</div>
+          <div class="text-xs text-gray-500 font-mono tracking-wider">SECRET TOKEN: [${stage.secretQrToken}]</div>
+          <div class="mt-4 pt-3 border-t border-gray-300 text-xs italic text-gray-600">
+            Keep this marker visible at the designated physical location. Do not tamper with or remove.
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('print-all-qr-btn').addEventListener('click', () => {
+      if (currentStagesData.length === 0) {
+        window.TreasureHunt.showToast('No stages available to print.', 'warning');
+        return;
+      }
+      const printSheet = document.getElementById('print-sheet');
+      printSheet.innerHTML = `
+        <div class="text-center font-bold text-xl uppercase mb-6 pb-2 border-b-2 border-black">
+          TREASURE HUNT - PHYSICAL QR MARKERS
+        </div>
+        ${currentStagesData.map(generatePrintCardHtml).join('')}
+      `;
+      window.print();
+    });
+
+    window.printSingleCard = (id) => {
+      const stage = currentStagesData.find(s => s.id === id);
+      if (!stage) return;
+      const printSheet = document.getElementById('print-sheet');
+      printSheet.innerHTML = generatePrintCardHtml(stage);
+      window.print();
+    };
+
+    // Initial Load & Polling
+    loadStagesData();
+    setInterval(() => {
+      if (!viewTeams.classList.contains('hidden')) {
+        loadTeamsData();
+      }
+    }, 6000);
+  </script>
+</body>
+</html>

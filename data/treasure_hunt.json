@@ -1,0 +1,206 @@
+{
+  "stages": [
+    {
+      "id": "stage_1",
+      "stageNumber": 1,
+      "title": "The Digital Beacon",
+      "locationHint": "Head to the Main Entrance Lobby near the Welcome Digital Kiosk. Look closely near the base of the interactive display pillar.",
+      "puzzleQuestion": "I am a cryptographic protocol that secures communication over the internet, succeeding SSL. What is my 3-letter acronym?",
+      "puzzleAnswer": "TLS",
+      "secretQrToken": "INFOTSAV_STAGE1_NEXUS",
+      "points": 100,
+      "createdAt": "2026-10-15T06:13:50.331Z"
+    },
+    {
+      "id": "stage_2",
+      "stageNumber": 2,
+      "title": "The Core Datacenter",
+      "locationHint": "Navigate to Level 2, Computer Lab 3. Inspect the server rack labeled \"SWITCH-ALPHA\" next to the network patch panel.",
+      "puzzleQuestion": "In computer science, I am an abstract data type that serves as a collection of elements with First-In, First-Out (FIFO) retrieval. What am I?",
+      "puzzleAnswer": "Queue",
+      "secretQrToken": "INFOTSAV_STAGE2_CYBER",
+      "points": 150,
+      "createdAt": "2026-10-15T06:13:50.331Z"
+    },
+    {
+      "id": "stage_3",
+      "stageNumber": 3,
+      "title": "The Quantum Vault",
+      "locationHint": "Make your way to the Innovation Hub Seminar Hall. Look behind the presenter podium corner on the right wing.",
+      "puzzleQuestion": "I am the cryptographic hash function designed by the NSA that produces a 256-bit digest, used universally in Bitcoin & Git. What is my name?",
+      "puzzleAnswer": "SHA-256",
+      "secretQrToken": "INFOTSAV_STAGE3_OMEGA",
+      "points": 200,
+      "createdAt": "2026-10-15T06:13:50.331Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "team_1792044897101_vvxu9",
+      "name": "PhantomCoders",
+      "pin": "9876",
+      "currentStage": 1,
+      "completed": false,
+      "qrScannedForCurrent": false,
+      "startTime": "2026-10-15T06:18:38.749Z",
+      "finishTime": null,
+      "totalTimeSeconds": 0,
+      "attemptsOnCurrentStage": 0,
+      "score": 0,
+      "history": [],
+      "stageUnlockedAt": "2026-10-15T06:14:57.116Z"
+    },
+    {
+      "id": "team_1792045017201_310d3",
+      "name": "code x",
+      "pin": "123456",
+      "currentStage": 2,
+      "completed": false,
+      "qrScannedForCurrent": false,
+      "startTime": "2026-10-15T06:16:57.201Z",
+      "finishTime": null,
+      "totalTimeSeconds": 0,
+      "attemptsOnCurrentStage": 0,
+      "score": 100,
+      "history": [
+        {
+          "stageNumber": 1,
+          "title": "The Digital Beacon",
+          "solvedAt": "2026-10-15T06:25:36.484Z",
+          "timeTakenSeconds": 154,
+          "attempts": 1
+        }
+      ],
+      "stageUnlockedAt": "2026-10-15T06:23:02.079Z"
+    },
+    {
+      "id": "team_1792046218868_vx2uw",
+      "name": "DirectRacers",
+      "pin": "1111",
+      "currentStage": 3,
+      "completed": true,
+      "qrScannedForCurrent": false,
+      "startTime": "2026-10-15T06:36:58.868Z",
+      "finishTime": "2026-10-15T06:36:58.881Z",
+      "totalTimeSeconds": 0,
+      "attemptsOnCurrentStage": 0,
+      "score": 450,
+      "history": [
+        {
+          "stageNumber": 1,
+          "title": "The Digital Beacon",
+          "locationHint": "Head to the Main Entrance Lobby near the Welcome Digital Kiosk. Look closely near the base of the interactive display pillar.",
+          "solvedAt": "2026-10-15T06:36:58.876Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 2,
+          "title": "The Core Datacenter",
+          "locationHint": "Navigate to Level 2, Computer Lab 3. Inspect the server rack labeled \"SWITCH-ALPHA\" next to the network patch panel.",
+          "solvedAt": "2026-10-15T06:36:58.879Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 3,
+          "title": "The Quantum Vault",
+          "locationHint": "Make your way to the Innovation Hub Seminar Hall. Look behind the presenter podium corner on the right wing.",
+          "solvedAt": "2026-10-15T06:36:58.881Z",
+          "timeTakenSeconds": 0
+        }
+      ],
+      "stageUnlockedAt": "2026-10-15T06:36:58.879Z"
+    },
+    {
+      "id": "team_1792046274040_u9944",
+      "name": "Racer_4036",
+      "pin": "1111",
+      "currentStage": 3,
+      "completed": true,
+      "qrScannedForCurrent": false,
+      "startTime": "2026-10-15T06:37:54.040Z",
+      "finishTime": "2026-10-15T06:37:54.051Z",
+      "totalTimeSeconds": 0,
+      "attemptsOnCurrentStage": 0,
+      "score": 450,
+      "history": [
+        {
+          "stageNumber": 1,
+          "title": "The Digital Beacon",
+          "locationHint": "Head to the Main Entrance Lobby near the Welcome Digital Kiosk. Look closely near the base of the interactive display pillar.",
+          "solvedAt": "2026-10-15T06:37:54.045Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 2,
+          "title": "The Core Datacenter",
+          "locationHint": "Navigate to Level 2, Computer Lab 3. Inspect the server rack labeled \"SWITCH-ALPHA\" next to the network patch panel.",
+          "solvedAt": "2026-10-15T06:37:54.049Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 3,
+          "title": "The Quantum Vault",
+          "locationHint": "Make your way to the Innovation Hub Seminar Hall. Look behind the presenter podium corner on the right wing.",
+          "solvedAt": "2026-10-15T06:37:54.051Z",
+          "timeTakenSeconds": 0
+        }
+      ],
+      "stageUnlockedAt": "2026-10-15T06:37:54.049Z"
+    },
+    {
+      "id": "team_1792047038164_bptms",
+      "name": "Racer_8162",
+      "pin": "1111",
+      "currentStage": 3,
+      "completed": true,
+      "qrScannedForCurrent": false,
+      "startTime": "2026-10-15T06:50:38.164Z",
+      "finishTime": "2026-10-15T06:50:38.174Z",
+      "totalTimeSeconds": 0,
+      "attemptsOnCurrentStage": 0,
+      "score": 450,
+      "history": [
+        {
+          "stageNumber": 1,
+          "title": "The Digital Beacon",
+          "locationHint": "Head to the Main Entrance Lobby near the Welcome Digital Kiosk. Look closely near the base of the interactive display pillar.",
+          "solvedAt": "2026-10-15T06:50:38.169Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 2,
+          "title": "The Core Datacenter",
+          "locationHint": "Navigate to Level 2, Computer Lab 3. Inspect the server rack labeled \"SWITCH-ALPHA\" next to the network patch panel.",
+          "solvedAt": "2026-10-15T06:50:38.173Z",
+          "timeTakenSeconds": 0
+        },
+        {
+          "stageNumber": 3,
+          "title": "The Quantum Vault",
+          "locationHint": "Make your way to the Innovation Hub Seminar Hall. Look behind the presenter podium corner on the right wing.",
+          "solvedAt": "2026-10-15T06:50:38.174Z",
+          "timeTakenSeconds": 0
+        }
+      ],
+      "stageUnlockedAt": "2026-10-15T06:50:38.173Z",
+      "liveLocation": {
+        "latitude": 12.97159,
+        "longitude": 77.59456,
+        "accuracy": 6,
+        "heading": 90,
+        "speed": 1.2,
+        "updatedAt": "2026-10-15T06:50:38.176Z",
+        "mapsUrl": "https://www.google.com/maps?q=12.97159,77.59456"
+      }
+    }
+  ],
+  "admin": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "settings": {
+    "huntName": "Treasure Hunt",
+    "allowManualEntry": true,
+    "startedAt": "2026-10-15T06:13:50.331Z"
+  }
+}
