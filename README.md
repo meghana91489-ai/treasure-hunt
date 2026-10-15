@@ -24,7 +24,50 @@ npm install
 ```bash
 npm start
 ```
-The server will boot up at: **`http://localhost:3000`**
+
+### 📍 Local Host Access Links
+- 🏠 **Home & Leaderboard:** [http://localhost:3000/](http://localhost:3000/)
+- 🎮 **Player Game Terminal:** [http://localhost:3000/play](http://localhost:3000/play)
+- 🔐 **Dual Login (Team & Admin):** [http://localhost:3000/login](http://localhost:3000/login)
+- 🛡️ **Admin Command Center:** [http://localhost:3000/admin](http://localhost:3000/admin) *(User: `admin` / Pass: `admin123`)*
+- 📊 **API Status / Health:** [http://localhost:3000/api/leaderboard](http://localhost:3000/api/leaderboard)
+
+---
+
+## ☁️ Deployment Guide (Render Backend + Vercel Frontend)
+
+### 🟣 Part A: Deploy Backend to Render
+1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Web Service**.
+2. Connect your GitHub repository: `https://github.com/meghana91489-ai/treasure-hunt`.
+3. Configure the Web Service:
+   - **Name:** `treasure-hunt-backend` (or your choice)
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Instance Type:** `Free`
+4. Click **Deploy Web Service**.
+5. Once deployed, copy your Render public HTTPS URL:
+   `https://treasure-hunt-backend.onrender.com`
+
+---
+
+### ▲ Part B: Deploy Frontend to Vercel
+1. Go to [Vercel Dashboard](https://vercel.com/new) and click **Import Project**.
+2. Select your repository: `https://github.com/meghana91489-ai/treasure-hunt`.
+3. Under **Project Settings**:
+   - The pre-configured `vercel.json` automatically handles routing (`/play`, `/admin`, `/login`).
+   - If prompted for **Root Directory**, you can leave it as `./` (or select `public`).
+4. Click **Deploy**.
+5. Once deployed, open your live Vercel URL: `https://treasure-hunt-xxx.vercel.app`.
+
+---
+
+### 🔗 Part C: Connect Frontend to Render Backend
+You have two effortless options:
+- **Option 1 (Instant via UI - No Rebuilding):**
+  Open your live Vercel website, click the **`⚙️ API`** pill at the bottom right corner, paste your Render URL (`https://your-service.onrender.com`), and click **Save & Reload**!
+- **Option 2 (Permanent via vercel.json rewrite):**
+  In `vercel.json`, update the `/api/:path*` rewrite destination to `https://your-service.onrender.com/api/:path*` and git push!
 
 ---
 

@@ -4,7 +4,13 @@
  */
 
 // ================= GLOBAL CONFIG & SOUND SYNTHESIS =================
-const API_BASE = '';
+const getApiBase = () => {
+  if (window.__BACKEND_URL__) return window.__BACKEND_URL__.replace(/\/+$/, '');
+  const stored = localStorage.getItem('th_backend_url');
+  if (stored) return stored.replace(/\/+$/, '');
+  return '';
+};
+const API_BASE = getApiBase();
 
 // Web Audio API Sound Synthesizer (Zero external audio asset dependencies)
 class SoundFX {
@@ -222,7 +228,7 @@ function triggerConfetti() {
 const API = {
   // Auth
   async loginAdmin(username, password) {
-    const res = await fetch('/api/auth/admin-login', {
+    const res = await fetch(`${getApiBase()}/api/auth/admin-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -231,7 +237,7 @@ const API = {
   },
 
   async loginTeam(teamName, pin) {
-    const res = await fetch('/api/auth/team-login', {
+    const res = await fetch(`${getApiBase()}/api/auth/team-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ teamName, pin })
@@ -240,7 +246,7 @@ const API = {
   },
 
   async checkAuth() {
-    const res = await fetch('/api/auth/me', {
+    const res = await fetch(`${getApiBase()}/api/auth/me`, {
       headers: Auth.authHeaders()
     });
     return res.json();
@@ -248,14 +254,14 @@ const API = {
 
   // Participant Play Loop
   async getCurrentStage() {
-    const res = await fetch('/api/play/current-stage', {
+    const res = await fetch(`${getApiBase()}/api/play/current-stage`, {
       headers: Auth.authHeaders()
     });
     return res.json();
   },
 
   async scanQr(qrToken) {
-    const res = await fetch('/api/play/scan-qr', {
+    const res = await fetch(`${getApiBase()}/api/play/scan-qr`, {
       method: 'POST',
       headers: Auth.authHeaders(),
       body: JSON.stringify({ qrToken })
@@ -264,7 +270,7 @@ const API = {
   },
 
   async submitPuzzle(answer) {
-    const res = await fetch('/api/play/submit-puzzle', {
+    const res = await fetch(`${getApiBase()}/api/play/submit-puzzle`, {
       method: 'POST',
       headers: Auth.authHeaders(),
       body: JSON.stringify({ answer })
@@ -274,20 +280,20 @@ const API = {
 
   // Leaderboard
   async getLeaderboard() {
-    const res = await fetch('/api/leaderboard');
+    const res = await fetch(`${getApiBase()}/api/leaderboard`);
     return res.json();
   },
 
   // Admin API
   async getAdminStages() {
-    const res = await fetch('/api/admin/stages', {
+    const res = await fetch(`${getApiBase()}/api/admin/stages`, {
       headers: Auth.authHeaders()
     });
     return res.json();
   },
 
   async createStage(data) {
-    const res = await fetch('/api/admin/stages', {
+    const res = await fetch(`${getApiBase()}/api/admin/stages`, {
       method: 'POST',
       headers: Auth.authHeaders(),
       body: JSON.stringify(data)
@@ -296,7 +302,7 @@ const API = {
   },
 
   async updateStage(id, data) {
-    const res = await fetch(`/api/admin/stages/${id}`, {
+    const res = await fetch(`${getApiBase()}/api/admin/stages/${id}`, {
       method: 'PUT',
       headers: Auth.authHeaders(),
       body: JSON.stringify(data)
@@ -305,7 +311,7 @@ const API = {
   },
 
   async deleteStage(id) {
-    const res = await fetch(`/api/admin/stages/${id}`, {
+    const res = await fetch(`${getApiBase()}/api/admin/stages/${id}`, {
       method: 'DELETE',
       headers: Auth.authHeaders()
     });
@@ -313,14 +319,14 @@ const API = {
   },
 
   async getAdminTeams() {
-    const res = await fetch('/api/admin/teams', {
+    const res = await fetch(`${getApiBase()}/api/admin/teams`, {
       headers: Auth.authHeaders()
     });
     return res.json();
   },
 
   async resetTeam(id) {
-    const res = await fetch(`/api/admin/teams/${id}/reset`, {
+    const res = await fetch(`${getApiBase()}/api/admin/teams/${id}/reset`, {
       method: 'POST',
       headers: Auth.authHeaders()
     });
@@ -328,7 +334,7 @@ const API = {
   },
 
   async resetAllTeams() {
-    const res = await fetch('/api/admin/teams/reset-all', {
+    const res = await fetch(`${getApiBase()}/api/admin/teams/reset-all`, {
       method: 'POST',
       headers: Auth.authHeaders()
     });
@@ -336,7 +342,7 @@ const API = {
   },
 
   async updateLiveLocation(locationData) {
-    const res = await fetch('/api/play/update-location', {
+    const res = await fetch(`${getApiBase()}/api/play/update-location`, {
       method: 'POST',
       headers: Auth.authHeaders(),
       body: JSON.stringify(locationData)
@@ -393,17 +399,134 @@ const Theme = {
   }
 };
 
-// Auto-run theme on DOM load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => Theme.init());
-} else {
+// ================= BACKEND URL SWITCHER (FOR VERCEL + RENDER) =================
+const BackendConfig = {
+  get() {
+    return localStorage.getItem('th_backend_url') || '';
+  },
+  set(url) {
+    if (!url) {
+      localStorage.removeItem('th_backend_url');
+    } else {
+      localStorage.setItem('th_backend_url', url.trim().replace(/\/+$/, ''));
+    }
+  },
+  async testConnection(url) {
+    try {
+      const target = (url || '').trim().replace(/\/+$/, '');
+      const res = await fetch(`${target}/api/leaderboard`, { method: 'GET' });
+      if (res.ok) {
+        const data = await res.json();
+        return { success: true, huntName: data.huntName || 'Connected' };
+      }
+      return { success: false, error: `HTTP ${res.status}: ${res.statusText}` };
+    } catch (e) {
+      return { success: false, error: e.message || 'Network error (CORS or server unreachable)' };
+    }
+  },
+  showModal() {
+    let modal = document.getElementById('th-backend-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'th-backend-modal';
+      modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm';
+      modal.innerHTML = `
+        <div class="glass-card bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl text-slate-100">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🌐</span>
+              <h3 class="font-bold text-lg text-cyan-300">Backend Server Settings</h3>
+            </div>
+            <button id="th-backend-modal-close" class="text-slate-400 hover:text-white text-lg p-1">&times;</button>
+          </div>
+          <div class="mt-4 text-xs text-slate-300 space-y-2">
+            <p>If you deployed your backend to <strong class="text-purple-400">Render</strong> and your frontend to <strong class="text-cyan-400">Vercel</strong>, enter your Render Web Service URL below:</p>
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-400 break-all">
+              Example: <span class="text-cyan-400">https://treasure-hunt-backend.onrender.com</span>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Render Backend URL</label>
+            <input type="text" id="th-backend-input" placeholder="https://your-service.onrender.com (leave blank for localhost)" 
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm font-mono text-cyan-300 focus:outline-none focus:border-cyan-400" />
+            <div id="th-backend-status-msg" class="text-xs mt-2 min-h-[1.25rem]"></div>
+          </div>
+          <div class="mt-5 flex gap-2 justify-end">
+            <button id="th-backend-clear-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Clear</button>
+            <button id="th-backend-test-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30">Test Connection</button>
+            <button id="th-backend-save-btn" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-400 text-slate-950 hover:bg-cyan-300 shadow-lg shadow-cyan-400/20">Save & Reload</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById('th-backend-modal-close').onclick = () => modal.classList.add('hidden');
+      document.getElementById('th-backend-clear-btn').onclick = () => {
+        document.getElementById('th-backend-input').value = '';
+        BackendConfig.set('');
+        showToast('Backend URL reset to default (localhost / same-origin)', 'info');
+        setTimeout(() => window.location.reload(), 800);
+      };
+      document.getElementById('th-backend-test-btn').onclick = async () => {
+        const val = document.getElementById('th-backend-input').value.trim();
+        const msg = document.getElementById('th-backend-status-msg');
+        msg.className = 'text-xs mt-2 text-cyan-400 animate-pulse';
+        msg.textContent = 'Testing connection to server...';
+        const res = await BackendConfig.testConnection(val);
+        if (res.success) {
+          msg.className = 'text-xs mt-2 text-emerald-400 font-semibold';
+          msg.textContent = `✅ Connected successfully! (${res.huntName})`;
+        } else {
+          msg.className = 'text-xs mt-2 text-rose-400';
+          msg.textContent = `❌ Connection failed: ${res.error}`;
+        }
+      };
+      document.getElementById('th-backend-save-btn').onclick = async () => {
+        const val = document.getElementById('th-backend-input').value.trim();
+        BackendConfig.set(val);
+        showToast('Backend URL saved! Reloading...', 'success');
+        setTimeout(() => window.location.reload(), 600);
+      };
+    }
+    const input = document.getElementById('th-backend-input');
+    if (input) input.value = BackendConfig.get();
+    modal.classList.remove('hidden');
+  },
+  initBadge() {
+    if (document.getElementById('th-backend-pill')) return;
+    const pill = document.createElement('div');
+    pill.id = 'th-backend-pill';
+    pill.className = 'fixed bottom-3 right-3 z-[9000] flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono cursor-pointer transition-all bg-slate-900/90 border border-slate-700/80 text-slate-300 shadow-lg hover:border-cyan-400 hover:text-cyan-300 backdrop-blur';
+    const current = BackendConfig.get();
+    const isCustom = Boolean(current);
+    pill.innerHTML = `
+      <span class="w-2 h-2 rounded-full ${isCustom ? 'bg-purple-400 animate-pulse' : 'bg-emerald-400'}"></span>
+      <span>${isCustom ? 'Render: ' + current.replace(/^https?:\/\//, '').slice(0, 15) + '...' : 'API: ' + (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'Local' : 'Same-Origin')}</span>
+      <span class="text-slate-400 hover:text-cyan-300 ml-1">⚙️</span>
+    `;
+    pill.title = 'Click to configure Backend URL (Render / Vercel)';
+    pill.onclick = () => BackendConfig.showModal();
+    document.body.appendChild(pill);
+  }
+};
+
+// Auto-run theme and backend pill on DOM load
+const initApp = () => {
   Theme.init();
+  BackendConfig.initBadge();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
 }
 
 window.TreasureHunt = {
   Auth,
   API,
   Theme,
+  BackendConfig,
   sounds,
   showToast,
   formatSeconds,
